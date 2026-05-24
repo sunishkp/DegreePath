@@ -1,36 +1,40 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+UCI Tuition & Financial Planning Modeler
 
-## Getting Started
+UCI Tuition & Financial Planning Modeler is an interactive tool that helps students estimate their tuition costs in real-time. It dynamically updates to reflect tuition, fees, scholarships, and financial aid, giving users a clear understanding of their net cost.
 
-First, run the development server:
+Tech Stack
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Frontend: Node.js
+Backend: TypeScript
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Logic: Real-time calculation of tuition, fees, and financial aid
+Design: Responsive layout for easy navigation and clear input handling
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Features
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Real-time cost calculation: Updates tuition and fees instantly as inputs change
+- Scholarships and financial aid integration: Shows how awards affect overall cost
+- Modular design: Easy to add new cost components or adjust calculations
+- Interactive and user-friendly interface: Clear input fields and dynamic updates
 
-## Learn More
+How It Works
 
-To learn more about Next.js, take a look at the following resources:
+Users enter tuition-related information and financial aid details. The tool calculates the total cost dynamically and updates the display in real-time. The modular JavaScript logic makes it easy to maintain and expand with additional scenarios, such as new scholarships or policy changes.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Example
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+User inputs base tuition, fees, and scholarship amounts
 
-## Deploy on Vercel
+The calculator immediately updates net cost on the page
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Users can experiment with different aid scenarios to see how costs change
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Future Improvements
+
+Add support for housing and meal plans
+
+Include loan and repayment simulations
+
+Improve mobile responsiveness and accessibility
+
+Integrate export options to PDF or CSV for personal budgeting
