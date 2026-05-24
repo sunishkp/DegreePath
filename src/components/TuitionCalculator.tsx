@@ -6,6 +6,7 @@ import { calculatorReducer, initialState } from "./calculatorReducer";
 import { useFinancials } from "./useFinancials";
 import { FormFields } from "../components/formFields";
 import { LedgerSummary } from "../components/LedgerSummary";
+import { getAvailableCourses } from "../engine/getAvailableCourses";
 
 export default function TuitionCalculator() {
   const [state, dispatch] = useReducer(calculatorReducer, initialState);
