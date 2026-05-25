@@ -43,7 +43,7 @@ export const COURSES: Course[] = [
     id: "ICS46",
     name: "Data Structure Implementation and Analysis",
     units: 4,
-    prerequisites: ["ICS33"],
+    prerequisites: ["ICS33", "ICS45C"],
     offered: ["Fall", "Winter", "Spring"],
   },
 
@@ -51,7 +51,7 @@ export const COURSES: Course[] = [
     id: "ICS51",
     name: "Introductory Computer Organization",
     units: 4,
-    prerequisites: ["ICS46"],
+    prerequisites: ["ICS33", "ICS6B"],
     offered: ["Fall", "Winter", "Spring", "Summer"],
   },
 
@@ -59,7 +59,7 @@ export const COURSES: Course[] = [
     id: "ICS53",
     name: "Principles in System Design",
     units: 4,
-    prerequisites: ["ICS46"],
+    prerequisites: ["ICS46", "ICS51"],
     offered: ["Fall", "Winter", "Spring", "Summer"],
   },
 
@@ -73,7 +73,7 @@ export const COURSES: Course[] = [
 
   {
     id: "ICS6B",
-    name: "Introductory Computer Organization",
+    name: "Boolean Algebra & Logic",
     units: 4,
     prerequisites: [],
     offered: ["Fall", "Winter", "Spring", "Summer"],
@@ -81,7 +81,7 @@ export const COURSES: Course[] = [
 
   {
     id: "ICS6D",
-    name: "Introductory Computer Organization",
+    name: "Discrete Mathematics for Computer Science",
     units: 4,
     prerequisites: ["ICS6B"],
     offered: ["Fall", "Winter", "Spring"],
@@ -100,7 +100,7 @@ export const COURSES: Course[] = [
     name: "Single Variable Calculus I",
     units: 4,
     prerequisites: [],
-    offered: ["Fall"],
+    offered: ["Fall", "Winter", "Spring", "Summer"],
   },
 
   {
@@ -108,15 +108,7 @@ export const COURSES: Course[] = [
     name: "Single Variable Calculus II",
     units: 4,
     prerequisites: ["MATH2A"],
-    offered: ["Fall"],
-  },
-
-  {
-    id: "MATH3A",
-    name: "Introduction to Linear Algebra",
-    units: 4,
-    prerequisites: ["MATH2B"],
-    offered: ["Fall"],
+    offered: ["Fall", "Winter", "Spring", "Summer"],
   },
 
   {
@@ -139,7 +131,7 @@ export const COURSES: Course[] = [
     id: "ICS139W",
     name: "Critical Writing on Information Technology",
     units: 4,
-    prerequisites: ["MATH2B"],
+    prerequisites: ["ICS33"],
     offered: ["Fall", "Winter", "Spring", "Summer"],
   },
 

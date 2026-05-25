@@ -14,7 +14,7 @@ export const FormFields = React.memo(function FormFields({ state, dispatch }: Fo
     <div className="space-y-6">
       {/* Step 1: Residency */}
       <div className="space-y-1">
-        <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Residency</label>
+        <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Residency Status</label>
         <select
           value={residency}
           onChange={(e) => dispatch({ type: "SET_RESIDENCY", payload: e.target.value as Residency })}
@@ -78,7 +78,7 @@ export const FormFields = React.memo(function FormFields({ state, dispatch }: Fo
       {/* Step 5: Period toggle */}
       {term && term !== "Summer" && (
         <div className="space-y-2">
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Billing View</label>
+          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">View</label>
           <div className="grid grid-cols-2 gap-2 bg-gray-100 dark:bg-gray-900 p-1 rounded-xl">
             <button
               type="button"
@@ -101,7 +101,7 @@ export const FormFields = React.memo(function FormFields({ state, dispatch }: Fo
       {/* Step 6: Housing */}
       {term && (
         <div className="space-y-1">
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Housing Strategy</label>
+          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Select Housing</label>
           <select
             value={housing}
             onChange={(e) => dispatch({ type: "SET_HOUSING", payload: e.target.value as HousingType })}

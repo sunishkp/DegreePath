@@ -1,3 +1,5 @@
+/* Course Planning Page File*/ 
+
 import CoursePlanner from "../../components/planner/CoursePlanner";
 
 export default function PlannerPage() {
