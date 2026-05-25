@@ -1,6 +1,6 @@
-UCI Tuition & Financial Planning Modeler
+DegreePath: Interactive Degree Planning System
 
-UCI Tuition & Financial Planning Modeler is an interactive tool that helps students estimate their tuition costs in real-time. It dynamically updates to reflect tuition, fees, scholarships, and financial aid, giving users a clear understanding of their net cost.
+An interactive tool that helps students estimate their tuition costs in real-time. It dynamically updates to reflect tuition, fees, scholarships, and financial aid, giving users a clear understanding of their net cost.
 
 Tech Stack
 
