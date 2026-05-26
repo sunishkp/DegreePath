@@ -21,6 +21,11 @@ export default function CoursePlanner() {
     message: string;
   } | null>(null);
 
+  const [optimizationMode, setOptimizationMode] =
+  useState<
+    "FASTEST" | "BALANCED" | "LIGHTWEIGHT" | "INTERNSHIP" | "SUMMER"
+  >("BALANCED");
+
   const toggleCourse = (courseId: string) => {
     setErrorState(null);
 
@@ -60,7 +65,8 @@ export default function CoursePlanner() {
     completedCourses,
     12,
     currentYear,
-    currentQuarter
+    currentQuarter,
+    optimizationMode
   );
 
   return (
@@ -220,7 +226,7 @@ export default function CoursePlanner() {
 
         <div className="p-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/50">
           <h3 className="font-bold text-gray-800 dark:text-gray-200">
-            Current Academic Term
+            Academic Status
           </h3>
         </div>
 
@@ -229,7 +235,7 @@ export default function CoursePlanner() {
           {/* Year */}
           <div className="space-y-1">
             <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-              Current Year
+              Start Year
             </label>
 
             <select
@@ -249,7 +255,7 @@ export default function CoursePlanner() {
           {/* Quarter */}
           <div className="space-y-1">
             <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-              Current Quarter
+              Start Quarter
             </label>
 
             <select
@@ -268,11 +274,51 @@ export default function CoursePlanner() {
               <option value="Fall">Fall</option>
               <option value="Winter">Winter</option>
               <option value="Spring">Spring</option>
-              <option value="Summer">Summer</option>
             </select>
           </div>
 
         </div>
+      </div>
+
+      {/* Optimization Mode */}
+      <div className="space-y-1">
+        <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+          Optimization Mode
+        </label>
+
+        <select
+          value={optimizationMode}
+          onChange={(e) =>
+            setOptimizationMode(
+              e.target.value as
+                | "FASTEST"
+                | "BALANCED"
+                | "LIGHTWEIGHT"
+            )
+          }
+          className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 p-2"
+        >
+          <option value="FASTEST">
+            Fastest Graduation
+          </option>
+
+          <option value="BALANCED">
+            Balanced Workload
+          </option>
+
+          <option value="LIGHTWEIGHT">
+            Lightweight Quarters
+          </option>
+
+          <option value="INTERNSHIP">
+            Internship Friendly (Off-Season)
+          </option>
+
+          <option value="SUMMER">
+            Maximize Summer
+          </option>
+
+        </select>
       </div>
 
       {/* ROADMAP */}

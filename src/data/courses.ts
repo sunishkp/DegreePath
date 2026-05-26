@@ -58,7 +58,7 @@ export const COURSES: Course[] = [
   {
     id: "ICS53",
     name: "Principles in System Design",
-    units: 4,
+    units: 6,
     prerequisites: ["ICS46", "ICS51"],
     offered: ["Fall", "Winter", "Spring", "Summer"],
   },

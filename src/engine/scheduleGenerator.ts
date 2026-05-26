@@ -1,6 +1,17 @@
 // src/engine/scheduleGenerator.ts
 
-export type Quarter = "Fall" | "Winter" | "Spring" | "Summer";
+export type Quarter =
+  | "Fall"
+  | "Winter"
+  | "Spring"
+  | "Summer";
+
+export type OptimizationMode =
+  | "FASTEST"
+  | "BALANCED"
+  | "LIGHTWEIGHT"
+  | "SUMMER"
+  | "INTERNSHIP";
 
 export type Course = {
   id: string;
@@ -14,10 +25,6 @@ export type Schedule = {
   [quarter: string]: Course[];
 };
 
-/**
- * Checks whether a student can take a course
- * based on completed prerequisites.
- */
 function canTakeCourse(
   course: Course,
   completedCourses: Set<string>
@@ -27,84 +34,138 @@ function canTakeCourse(
   );
 }
 
-/**
- * Generates a multi-quarter academic schedule.
- */
+function getPriority(course: Course): number {
+  let score = 0;
+
+  score += course.prerequisites.length * 3;
+
+  if (course.id.startsWith("ICS")) {
+    score += 5;
+  }
+
+  return score;
+}
+
 export function generateSchedule(
   allCourses: Course[],
   completedCourseIds: string[],
   maxUnitsPerQuarter: number,
   startingYear = 1,
   startingQuarter: Quarter = "Fall",
+  mode: OptimizationMode = "BALANCED",
   maxYears: number = 4
 ): Schedule {
+
   const schedule: Schedule = {};
 
-  // Fast lookup for completed courses
   const completed = new Set<string>(completedCourseIds);
 
-  // Courses still needing completion
   let remainingCourses = allCourses.filter(
     (course) => !completed.has(course.id)
   );
 
-  const quarters: Quarter[] = ["Fall", "Winter", "Spring"];
+  let quarters: Quarter[] = [
+    "Fall",
+    "Winter",
+    "Spring",
+  ];
+
+  if (mode === "SUMMER") {
+    quarters = ["Fall", "Winter", "Spring", "Summer"];
+  }
 
   let year = startingYear;
-  let quarterIndex = quarters.indexOf(startingQuarter) + 1;
 
-  // Continue until all courses scheduled
-  // OR maximum year limit reached
+  let quarterIndex = quarters.indexOf(startingQuarter);
+
+  let internshipApplied = false;
+
   while (
     remainingCourses.length > 0 &&
     year <= maxYears
   ) {
+
     const currentQuarter =
       quarters[quarterIndex % quarters.length];
 
     const quarterKey = `Year ${year} - ${currentQuarter}`;
 
-    let unitsUsed = 0;
+    if (
+      mode === "INTERNSHIP" &&
+      !internshipApplied &&
+      currentQuarter === "Fall"
+    ) {
+      internshipApplied = true;
 
+      schedule[quarterKey] = [];
+
+      quarterIndex++;
+
+      if (quarterIndex % quarters.length === 0) {
+        year++;
+      }
+
+      continue;
+    }
+
+    let unitsUsed = 0;
     const selectedCourses: Course[] = [];
 
-    // Find courses available THIS quarter
-    // whose prerequisites are satisfied
     const availableCourses = remainingCourses.filter(
       (course) =>
         canTakeCourse(course, completed) &&
         course.offered.includes(currentQuarter)
     );
 
-    // Greedily fill quarter until unit cap
-    for (const course of availableCourses) {
-      if (
-        unitsUsed + course.units <=
-        maxUnitsPerQuarter
-      ) {
-        selectedCourses.push(course);
+    if (mode === "FASTEST") {
+      availableCourses.sort((a, b) => {
+        const diff = getPriority(b) - getPriority(a);
+        return diff !== 0 ? diff : b.units - a.units;
+      });
+    } else if (mode === "BALANCED") {
+      availableCourses.sort((a, b) => {
+        const diff = getPriority(b) - getPriority(a);
+        return diff !== 0 ? diff : a.units - b.units;
+      });
+    } else if (mode === "LIGHTWEIGHT") {
+      maxUnitsPerQuarter = 8;
 
+      availableCourses.sort((a, b) => {
+        const diff = getPriority(b) - getPriority(a);
+        return diff !== 0 ? diff : a.units - b.units;
+      });
+    } else if (mode === "SUMMER") {
+      availableCourses.sort((a, b) => {
+        const diff = getPriority(b) - getPriority(a);
+        return diff !== 0 ? diff : b.units - a.units;
+      });
+    } else if (mode === "INTERNSHIP") {
+      availableCourses.sort((a, b) => {
+        const diff = getPriority(b) - getPriority(a);
+        return diff !== 0 ? diff : a.units - b.units;
+      });
+    }
+
+    for (const course of availableCourses) {
+      if (unitsUsed + course.units <= maxUnitsPerQuarter) {
+        selectedCourses.push(course);
         unitsUsed += course.units;
       }
     }
 
-    // Mark scheduled courses as completed
     for (const course of selectedCourses) {
       completed.add(course.id);
     }
 
-    // Remove completed courses
     remainingCourses = remainingCourses.filter(
       (course) => !completed.has(course.id)
     );
 
-    // Save quarter schedule
     schedule[quarterKey] = selectedCourses;
 
     quarterIndex++;
 
-    // Every 3 quarters -> next year
-    if (quarterIndex % 3 === 0) {
+    if (quarterIndex % quarters.length === 0) {
       year++;
     }
   }
