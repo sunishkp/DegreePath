@@ -64,7 +64,7 @@ export const COURSES: Course[] = [
   },
 
   {
-    id: "In4Matx 43",
+    id: "IN4MATX43",
     name: "Introduction to Software Engineering",
     units: 4,
     prerequisites: ["ICS32"],
@@ -120,7 +120,7 @@ export const COURSES: Course[] = [
   },
 
   {
-    id: "COMPSCI 161",
+    id: "COMPSCI161",
     name: "Design and Analysis of Algorithms",
     units: 4,
     prerequisites: ["ICS46", "ICS6D", "ICS6B", "MATH2B"],
