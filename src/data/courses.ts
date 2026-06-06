@@ -120,7 +120,7 @@ export const COURSES: Course[] = [
   },
 
   {
-    id: "COMPSCI161",
+    id: "CS161",
     name: "Design and Analysis of Algorithms",
     units: 4,
     prerequisites: ["ICS46", "ICS6D", "ICS6B", "MATH2B"],
@@ -134,5 +134,268 @@ export const COURSES: Course[] = [
     prerequisites: ["ICS33"],
     offered: ["Fall", "Winter", "Spring", "Summer"],
   },
+
+  /* Algorithms - Specialization*/
+
+  {
+    id: "CS162",
+    name: "Formal Languages and Autaomata",
+    units: 4,
+    prerequisites: ["ICS46", "ICS6B", "ICS6D", "MATH2B"],
+    offered: ["Fall", "Winter", "Spring"],
+  },
+
+  {
+    id: "CS163",
+    name: "Graph Algorithms",
+    units: 4,
+    prerequisites: ["CS161"],
+    offered: ["Fall", "Winter", "Spring", "Summer"],
+  },
+
+  {
+    id: "CS164",
+    name: "Computational Geometry",
+    units: 4,
+    prerequisites: ["CS161"],
+    offered: ["Fall", "Winter", "Spring"],
+  },
+
+  {
+    id: "CS165",
+    name: "Project in Algorithms and Data Structures",
+    units: 4,
+    prerequisites: ["CS161"],
+    offered: ["Fall", "Winter"],
+  },
+
+  {
+    id: "CS166",
+    name: "Quantam Computation and Information",
+    units: 4,
+    prerequisites: ["CS161", "ICS6N"],
+    offered: ["Fall", "Winter"],
+  },
+
+  {
+    id: "CS167",
+    name: "Introduction to Applied Cryptography",
+    units: 4,
+    prerequisites: ["CS161"],
+    offered: ["Fall", "Spring"],
+  },
+
+  {
+    id: "CS169",
+    name: "Introduction to Optimization",
+    units: 4,
+    prerequisites: ["ICS6N", "STATS67"],
+    offered: ["Fall"],
+  },
+
+  /* Architecture and Embedded Systems - Specialization*/
+  
+  {
+    id: "CS145",
+    name: "Embedded Software",
+    units: 4,
+    prerequisites: ["ICS46", "ICS51"],
+    offered: ["Fall", "Winter"],
+  },
+
+  {
+    id: "CS147",
+    name: "Internet of Things (IoT) Software and Systems",
+    units: 4,
+    prerequisites: ["ICS33"],
+    offered: ["Winter", "Spring"],
+  },
+
+  {
+    id: "CS151",
+    name: "Digital Logic Design",
+    units: 4,
+    prerequisites: ["ICS33", "ICS51", "ICS6B", "ICS6D"],
+    offered: ["Winter"],
+  },
+
+  {
+    id: "CS152",
+    name: "Computer Architecture",
+    units: 4,
+    prerequisites: ["ICS51"],
+    offered: ["Spring"],
+  },
+
+  {
+    id: "CS154",
+    name: "Computer Design Laboratory",
+    units: 4,
+    prerequisites: ["CS151", "CS152"],
+    offered: ["Winter"],
+  },
+
+  /* BioInformatics - Specialization*/
+  {
+    id: "CS184A",
+    name: "Artificial Intelligence in Biology and Medicine",
+    units: 4,
+    prerequisites: ["ICS6N"],
+    offered: ["Fall"],
+  },
+
+  {
+    id: "CS172B",
+    name: "Neural Networks and Deep Learning",
+    units: 4,
+    prerequisites: ["STATS120A", "STATS120B", "CS178"],
+    offered: ["Fall"],
+  },
+
+  {
+    id: "CS172C",
+    name: "Artificial Intelligence Frontiers",
+    units: 4,
+    prerequisites: ["CS171", "CS172B"],
+    offered: ["Winter"],
+  },
+
+  {
+    id: "CS178",
+    name: "Machine Learning and Data Mining",
+    units: 4,
+    prerequisites: ["ICS6B", "ICS6D", "ICS6N", "MATH2B", "STATS67"],
+    offered: ["Fall", "Winter", "Spring"],
+  },
+
+  {
+    id: "CS184C",
+    name: "Computational Systems Biology",
+    units: 4,
+    prerequisites: ["CS184A"],
+    offered: ["Spring"],
+  },
+
+  {
+    id: "CS189",
+    name: "Project in Bioinformatics",
+    units: 4,
+    prerequisites: ["CS184A"],
+    offered: ["Spring"],
+  },
+
+  /* Information - Specialization*/
+  {
+    id: "CS121",
+    name: "Information Retrieval",
+    units: 4,
+    prerequisites: ["ICS45C", "STATS67"],
+    offered: ["Fall", "Spring"],
+  },
+
+  {
+    id: "CS122A",
+    name: "Introduction to Data Management",
+    units: 4,
+    prerequisites: ["ICS33"],
+    offered: ["Fall", "Winter", "Spring"],
+  },
+
+  {
+    id: "CS122B",
+    name: "Project in Databases and Web Applications",
+    units: 4,
+    prerequisites: ["CS122A", "ICS45J"],
+    offered: ["Fall", "Winter"],
+  },
+
+  {
+    id: "CS122C",
+    name: "Principles of Data Management",
+    units: 4,
+    prerequisites: ["ICS33"],
+    offered: ["Spring"],
+  },
+
+  {
+    id: "CS122D",
+    name: "Beyond SQL Data Management",
+    units: 4,
+    prerequisites: ["ICS46", "ICS51", "CS122A"],
+    offered: ["Spring"],
+  },
+
+  {
+    id: "ICS45J",
+    name: "Programming in Java",
+    units: 4,
+    prerequisites: ["ICS33"],
+    offered: ["Fall", "Winter", "Spring"],
+  },
+
+  {
+    id: "CS125",
+    name: "Next Generation Search Systems",
+    units: 4,
+    prerequisites: ["ICS45C", "STATS67"],
+    offered: ["Spring"],
+  },
+
+  {
+    id: "CS132",
+    name: "Computer Networks",
+    units: 4,
+    prerequisites: ["STATS67"],
+    offered: ["Fall", "Winter", "Spring"],
+  },
+
+  {
+    id: "CS134",
+    name: "Computer and Network Security",
+    units: 4,
+    prerequisites: ["ICS53", "CS161"],
+    offered: ["Winter"],
+  },
+
+  {
+    id: "CS141",
+    name: "Concepts in Programming Languages",
+    units: 4,
+    prerequisites: ["ICS46", "ICS51"],
+    offered: ["Fall"],
+  },
+
+  {
+    id: "CS142A",
+    name: "Compilers and Interpreters",
+    units: 4,
+    prerequisites: ["ICS46", "ICS51"],
+    offered: ["Spring"],
+  },
+
+  {
+    id: "CS143A",
+    name: "Principles of Operating Systems",
+    units: 4,
+    prerequisites: ["ICS46", "ICS51"],
+    offered: ["Winter"],
+  },
+
+  
+
+
+
+
+
+
+
+
+  /* Intelligent Systems - Specialization*/
+
+  /* Networked Systems - Specialization*/
+
+  /* Systems and Software - Specialization*/
+
+  /* Visual Computing - Specialization*/
 
 ];

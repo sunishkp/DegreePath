@@ -10,11 +10,11 @@ export default function MainPortal() {
 
         {/* Header */}
         <div className="text-center space-y-4">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <h3 className="text-3xl font-semibold text-gray-900 dark:text-white">
             DegreePath: Interactive Degree Planning System
           </h3>
 
-          <p className="text-lg sm:text-xl text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">
+          <p className="text-lg sm:text-l text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">
             Generate prerequisite-aware schedules, validate course eligibility,
             estimate university costs, and track academic progress through an
             interactive planning interface.

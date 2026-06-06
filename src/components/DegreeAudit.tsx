@@ -178,7 +178,7 @@ export default function DegreeAudit() {
       {/* Select Track Option */}
       <div className="rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
         <label htmlFor="specialization-select" className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">
-          Degree Specialization Track
+          CS Degree Specialization Track
         </label>
         <select
           id="specialization-select"
@@ -254,12 +254,18 @@ export default function DegreeAudit() {
 
       {/* Recommender Segment */}
       <div className="rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
-        <h2 className="text-md font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wider text-xs mb-3">
+        <h2 className="text-md font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wider text-xs mb-2">
           Recommended Next Core Options
         </h2>
-        <p>
-          Have more than one core option to take? Choose a course and check out the recommendation engine to find out which course unlocks many others.
-        </p>
+
+        {eligibleCoreCourses.length > 0 && (
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">
+            Choosing between multiple courses? 
+            Visit the <span className="font-semibold text-blue-600 dark:text-blue-400">Course Recommendation Engine</span> to 
+            compare your options and determine which course unlocks the most future prequisites and opppurtunities, so that you can prioritize it first. 
+          </p>
+        )}
+
         {eligibleCoreCourses.length === 0 ? (
           <p className="text-gray-400 dark:text-gray-500 text-sm italic">
             No remaining core options unlocked. Fulfill introductory core courses to clear upcoming prerequisites.
