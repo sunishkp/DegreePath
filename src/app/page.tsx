@@ -16,7 +16,7 @@ export default function MainPortal() {
 
           <p className="text-lg sm:text-l text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">
             Generate prerequisite-aware schedules, validate course eligibility,
-            estimate university costs, and track academic progress through an
+            estimate university costs, and track academic progress through this all-in-one
             interactive planning interface.
           </p>
         </div>

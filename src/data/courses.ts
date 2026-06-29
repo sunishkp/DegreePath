@@ -146,14 +146,6 @@ export const COURSES: Course[] = [
   },
 
   {
-    id: "CS163",
-    name: "Graph Algorithms",
-    units: 4,
-    prerequisites: ["CS161"],
-    offered: ["Fall", "Winter", "Spring", "Summer"],
-  },
-
-  {
     id: "CS164",
     name: "Computational Geometry",
     units: 4,
@@ -381,21 +373,128 @@ export const COURSES: Course[] = [
     offered: ["Winter"],
   },
 
-  
+  {
+    id: "CS163",
+    name: "Graph Algorithms",
+    units: 4,
+    prerequisites: ["CS161"],
+    offered: ["Winter", "Spring"],
+  },
 
-
-
-
-
-
-
+  {
+    id: "CS179",
+    name: "Alogithms for Probabilistic Graphical Models",
+    units: 4,
+    prerequisites: ["CS171"],
+    offered: ["Winter"],
+  },
 
   /* Intelligent Systems - Specialization*/
+  {
+    id: "CS171",
+    name: "Introduction to Artificial Intelligence",
+    units: 4,
+    prerequisites: ["STATS67", "ICS46", "MATH2B"],
+    offered: ["Fall", "Winter", "Spring", "Summer"],
+  },
+
+  {
+    id: "CS175",
+    name: "Project in Artificial Intelligence",
+    units: 4,
+    prerequisites: ["CS178", "CS171"],
+    offered: ["Fall", "Winter", "Spring"],
+  },
+
+  {
+    id: "CS116",
+    name: "Computational Photography and Vision",
+    units: 4,
+    prerequisites: ["ICS6D", "ICS6N", "MATH2B", "ICS46"],
+    offered: ["Fall"],
+  },
+
+  {
+    id: "CS177",
+    name: "Applications of Probability in Computer Science",
+    units: 4,
+    prerequisites: ["ICS6D", "ICS6N", "ICS6B", "MATH2B", "STATS67"],
+    offered: ["Winter"],
+  },
+
 
   /* Networked Systems - Specialization*/
+  {
+    id: "CS133",
+    name: "Advanced Computer Networks",
+    units: 4,
+    prerequisites: ["CS132"],
+    offered: ["Winter"],
+  },
 
   /* Systems and Software - Specialization*/
+  {
+    id: "CS131",
+    name: "Parallel and Distributed Computing",
+    units: 4,
+    prerequisites: ["CS143A"],
+    offered: ["Fall", "Winter"],
+  },
+
+  {
+    id: "CS142B",
+    name: "Project in Compilers and Interpreters",
+    units: 4,
+    prerequisites: ["CS142A"],
+    offered: ["Winter", "Spring"],
+  },
+
+  {
+    id: "CS143B",
+    name: "Project in Operating System Organization",
+    units: 4,
+    prerequisites: ["CS143A"],
+    offered: ["Winter"],
+  },
 
   /* Visual Computing - Specialization*/
+  {
+    id: "CS111",
+    name: "Digital Image Processing",
+    units: 4,
+    prerequisites: ["ICS46", "ICS6D", "ICS6N"],
+    offered: ["Spring"],
+  },
 
+  {
+    id: "CS112",
+    name: "Computer Graphics",
+    units: 4,
+    prerequisites: ["ICS46", "ICS6N"],
+    offered: ["Fall"],
+  },
+
+  {
+    id: "CS114",
+    name: "Principles of Operating Systems",
+    units: 4,
+    prerequisites: ["ICS46", "ICS51"],
+    offered: ["Winter"],
+  },
+
+  {
+    id: "CS117",
+    name: "Project in Computer Vision",
+    units: 4,
+    prerequisites: ["ICS6D", "MATH2B", "ICS46", "CS171"],
+    offered: ["Winter"],
+  },
+
+  {
+    id: "CS118",
+    name: "Introduction to Virtual Reality",
+    units: 4,
+    prerequisites: ["ICS33", "ICS6N"],
+    offered: ["Spring"],
+  },
 ];

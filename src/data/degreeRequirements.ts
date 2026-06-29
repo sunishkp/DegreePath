@@ -14,7 +14,7 @@ export const DEGREE_REQUIREMENTS = {
     "STATS67",
     "MATH2A",
     "MATH2B",
-    "COMPSCI161",
+    "CS161",
     "ICS139W",
   ],
 
