@@ -1,10 +1,5 @@
 // src/engine/scheduleGenerator.ts
-
-export type Quarter =
-  | "Fall"
-  | "Winter"
-  | "Spring"
-  | "Summer";
+export type Quarter = "Fall" | "Winter" | "Spring" | "Summer";
 
 export type OptimizationMode =
   | "FASTEST"
@@ -36,13 +31,10 @@ function canTakeCourse(
 
 function getPriority(course: Course): number {
   let score = 0;
-
   score += course.prerequisites.length * 3;
-
   if (course.id.startsWith("ICS")) {
     score += 5;
   }
-
   return score;
 }
 
@@ -55,57 +47,56 @@ export function generateSchedule(
   mode: OptimizationMode = "BALANCED",
   maxYears: number = 4
 ): Schedule {
-
   const schedule: Schedule = {};
-
   const completed = new Set<string>(completedCourseIds);
+
+  const uniqueCourseMap = new Map<string, Course>();
+  for (const course of allCourses) {
+    if (course && course.id) {
+      uniqueCourseMap.set(course.id, course);
+    }
+  }
+  const sanitizedCourses = Array.from(uniqueCourseMap.values());
 
   let remainingCourses = allCourses.filter(
     (course) => !completed.has(course.id)
   );
 
-  let quarters: Quarter[] = [
-    "Fall",
-    "Winter",
-    "Spring",
-  ];
-
-  if (mode === "SUMMER") {
-    quarters = ["Fall", "Winter", "Spring", "Summer"];
-  }
+  const standardQuarters: Quarter[] = ["Fall", "Winter", "Spring"];
+  const summerQuarters: Quarter[] = ["Fall", "Winter", "Spring", "Summer"];
+  
+  const quarters = (mode === "SUMMER") ? summerQuarters : standardQuarters;
 
   let year = startingYear;
-
   let quarterIndex = quarters.indexOf(startingQuarter);
+  
+  if (quarterIndex === -1) quarterIndex = 0;
 
   let internshipApplied = false;
 
-  while (
-    remainingCourses.length > 0 &&
-    year <= maxYears
-  ) {
+  const strictMaxYears = mode === "LIGHTWEIGHT" ? 8 : maxYears;
 
-    const currentQuarter =
-      quarters[quarterIndex % quarters.length];
-
+  while (remainingCourses.length > 0 && year <= strictMaxYears) {
+    const currentQuarter = quarters[quarterIndex];
     const quarterKey = `Year ${year} - ${currentQuarter}`;
 
-    if (
-      mode === "INTERNSHIP" &&
-      !internshipApplied &&
-      currentQuarter === "Fall"
-    ) {
+    if (mode === "INTERNSHIP" && !internshipApplied && currentQuarter === "Fall") {
       internshipApplied = true;
-
       schedule[quarterKey] = [];
-
+      
       quarterIndex++;
-
-      if (quarterIndex % quarters.length === 0) {
+      if (quarterIndex >= quarters.length) {
+        quarterIndex = 0;
         year++;
       }
-
       continue;
+    }
+
+    let currentMaxUnits = maxUnitsPerQuarter;
+    if (mode === "FASTEST") {
+      currentMaxUnits = 20; 
+    } else if (mode === "LIGHTWEIGHT") {
+      currentMaxUnits = 12; // Allow up to 3 classes max (12 units)
     }
 
     let unitsUsed = 0;
@@ -117,29 +108,12 @@ export function generateSchedule(
         course.offered.includes(currentQuarter)
     );
 
-    if (mode === "FASTEST") {
+    if (mode === "FASTEST" || mode === "SUMMER") {
       availableCourses.sort((a, b) => {
         const diff = getPriority(b) - getPriority(a);
         return diff !== 0 ? diff : b.units - a.units;
       });
-    } else if (mode === "BALANCED") {
-      availableCourses.sort((a, b) => {
-        const diff = getPriority(b) - getPriority(a);
-        return diff !== 0 ? diff : a.units - b.units;
-      });
-    } else if (mode === "LIGHTWEIGHT") {
-      maxUnitsPerQuarter = 8;
-
-      availableCourses.sort((a, b) => {
-        const diff = getPriority(b) - getPriority(a);
-        return diff !== 0 ? diff : a.units - b.units;
-      });
-    } else if (mode === "SUMMER") {
-      availableCourses.sort((a, b) => {
-        const diff = getPriority(b) - getPriority(a);
-        return diff !== 0 ? diff : b.units - a.units;
-      });
-    } else if (mode === "INTERNSHIP") {
+    } else {
       availableCourses.sort((a, b) => {
         const diff = getPriority(b) - getPriority(a);
         return diff !== 0 ? diff : a.units - b.units;
@@ -147,10 +121,36 @@ export function generateSchedule(
     }
 
     for (const course of availableCourses) {
-      if (unitsUsed + course.units <= maxUnitsPerQuarter) {
+      // If adding this class breaks our maximum ceiling limit, look for others
+      if (unitsUsed + course.units <= currentMaxUnits) {
         selectedCourses.push(course);
         unitsUsed += course.units;
+        
+        // Stop matching classes early if we hit a clean 8-unit or 12-unit baseline milestone
+        if (mode === "LIGHTWEIGHT" && unitsUsed >= 8) {
+          break;
+        }
       }
+    }
+
+    // FASTEST MINIMUM FLOOR CHECK
+    if (mode === "FASTEST" && remainingCourses.length > 0 && unitsUsed < 12) {
+      quarterIndex++;
+      if (quarterIndex >= quarters.length) {
+        quarterIndex = 0;
+        year++;
+      }
+      continue;
+    }
+
+    // LIGHTWEIGHT MINIMUM FLOOR CHECK: Prevents single 4-unit quarters by deferring them
+    if (mode === "LIGHTWEIGHT" && remainingCourses.length > 0 && unitsUsed < 8) {
+      quarterIndex++;
+      if (quarterIndex >= quarters.length) {
+        quarterIndex = 0;
+        year++;
+      }
+      continue;
     }
 
     for (const course of selectedCourses) {
@@ -161,12 +161,14 @@ export function generateSchedule(
       (course) => !completed.has(course.id)
     );
 
-    schedule[quarterKey] = selectedCourses;
+    if (selectedCourses.length > 0) {
+      schedule[quarterKey] = selectedCourses;
+    }
 
     quarterIndex++;
-
-    if (quarterIndex % quarters.length === 0) {
-      year++;
+    if (quarterIndex >= quarters.length) {
+      quarterIndex = 0;
+      year++; 
     }
   }
 

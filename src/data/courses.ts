@@ -253,14 +253,6 @@ export const COURSES: Course[] = [
   },
 
   {
-    id: "CS178",
-    name: "Machine Learning and Data Mining",
-    units: 4,
-    prerequisites: ["ICS6B", "ICS6D", "ICS6N", "MATH2B", "STATS67"],
-    offered: ["Fall", "Winter", "Spring"],
-  },
-
-  {
     id: "CS184C",
     name: "Computational Systems Biology",
     units: 4,
@@ -407,6 +399,14 @@ export const COURSES: Course[] = [
   },
 
   {
+    id: "CS178",
+    name: "Machine Learning and Data Mining",
+    units: 4,
+    prerequisites: ["ICS6B", "ICS6D", "ICS6N", "STATS67", "MATH2B"],
+    offered: ["Fall", "Winter", "Spring", "Summer"],
+  },
+
+  {
     id: "CS116",
     name: "Computational Photography and Vision",
     units: 4,
@@ -498,3 +498,46 @@ export const COURSES: Course[] = [
     offered: ["Spring"],
   },
 ];
+
+// ==========================================================================
+// AUTOMATED METADATA ELECTIVE INJECTION ENGINE
+// Parses range configuration rules to build structured course objects natively.
+// ==========================================================================
+import { DEGREE_REQUIREMENTS } from "./degreeRequirements";
+
+DEGREE_REQUIREMENTS.upperDivisionElectives.allowedCourses.forEach((rule) => {
+  
+  if (typeof rule === "string") {
+    if (!COURSES.some((c) => c.id === rule)) {
+      const label = rule.startsWith("CS") ? "Computer Science" : "Informatics";
+      const digits = rule.match(/\d+/)?.[0] || "";
+
+      COURSES.push({
+        id: rule,
+        name: `${label} Elective Option ${digits}`,
+        units: 4,
+        prerequisites: ["ICS46"],
+        offered: ["Fall", "Winter", "Spring"],
+      });
+    }
+  } 
+  
+  else if (typeof rule === "object" && rule.type === "range") {
+    const label = rule.subject === "CS" ? "CS" : rule.subject;
+
+    for (let num = rule.start; num <= rule.end; num++) {
+      const generatedId = `${rule.subject}${num}`;
+
+      // Only add if it doesn't already exist as a manual core/specialization course
+      if (!COURSES.some((c) => c.id === generatedId)) {
+        COURSES.push({
+          id: generatedId,
+          name: `${label} Upper-Div Elective ${num}`,
+          units: 4,
+          prerequisites: ["ICS46"],
+          offered: ["Fall", "Winter", "Spring"],
+        });
+      }
+    }
+  }
+});

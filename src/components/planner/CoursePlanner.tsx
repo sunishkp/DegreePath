@@ -1,45 +1,164 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { COURSES } from "../../data/courses";
+import { DEGREE_REQUIREMENTS } from "../../data/degreeRequirements";
 import { getAvailableCourses } from "../../engine/getAvailableCourses";
 import AvailableCoursesList from "../../data/AvailableCourseList";
 import { generateSchedule } from "../../engine/scheduleGenerator";
 
+type SpecializationKey = keyof typeof DEGREE_REQUIREMENTS.specializations | "ALL";
+
 export default function CoursePlanner() {
   const [completedCourses, setCompletedCourses] = useState<string[]>([]);
   const [showChecklist, setShowChecklist] = useState(true);
-
   const [currentYear, setCurrentYear] = useState(1);
-
   const [currentQuarter, setCurrentQuarter] = useState<
     "Fall" | "Winter" | "Spring" | "Summer"
   >("Fall");
-
+  const [specialization, setSpecialization] = useState<SpecializationKey>("ALL");
   const [errorState, setErrorState] = useState<{
     courseId: string;
     message: string;
   } | null>(null);
-
-  const [optimizationMode, setOptimizationMode] =
-  useState<
+  const [optimizationMode, setOptimizationMode] = useState<
     "FASTEST" | "BALANCED" | "LIGHTWEIGHT" | "INTERNSHIP" | "SUMMER"
   >("BALANCED");
 
+  /* ==========================================================================
+     UPPER DIVISION ELECTIVE IDENTIFICATION ENGINE
+     ========================================================================== */
+  const isUpperDivElective = (courseId: string): boolean => {
+    if (DEGREE_REQUIREMENTS.upperDivisionElectives.allowedCourses.includes(courseId)) {
+      return true;
+    }
+
+    const match = courseId.match(/^([A-Za-z\s]+)(\d+)/);
+    if (!match) return false;
+
+    const subject = match[1].replace(/\s+/g, "").toUpperCase();
+    const courseNum = parseInt(match[2], 10);
+
+    return DEGREE_REQUIREMENTS.upperDivisionElectives.allowedCourses.some((rule) => {
+      if (typeof rule === "object" && rule.type === "range" && rule.subject === subject) {
+        return courseNum >= rule.start && courseNum <= rule.end;
+      }
+      return false;
+    });
+  };
+
+  /* ==========================================================================
+     FILTER ENGINE FOR CHECKLIST
+     ========================================================================== */
+  const filteredCoursesForChecklist = useMemo(() => {
+    const rawList = COURSES.filter((course) => {
+      if (specialization === "ALL") return true;
+
+      const isCore = DEGREE_REQUIREMENTS.core.includes(course.id);
+      if (isCore) return true;
+
+      const specConfig = (specialization as string) !== "ALL" 
+        ? DEGREE_REQUIREMENTS.specializations[specialization] 
+        : null;
+
+      const isSpecializationRelated = specConfig
+        ? specConfig.mandatory.includes(course.id) || specConfig.electives.includes(course.id)
+        : false;
+
+      if (isSpecializationRelated) return true;
+
+      return isUpperDivElective(course.id);
+    });
+
+    return Array.from(new Set(rawList.map((c) => c.id)))
+      .map((id) => rawList.find((c) => c.id === id)!);
+  }, [specialization]);
+
+  /* ==========================================================================
+     OPTIMIZATION ENGINE FOR FUTURE QUARTER SCHEDULING 
+     ========================================================================== */
+  const optimizedCoursesForSchedule = useMemo(() => {
+    const corePool = COURSES.filter((c) => DEGREE_REQUIREMENTS.core.includes(c.id));
+
+    const specConfig = specialization !== "ALL" 
+      ? DEGREE_REQUIREMENTS.specializations[specialization] 
+      : null;
+
+    let specializationPool: typeof COURSES = [];
+    
+    if (specConfig) {
+      const mandatorySpec = COURSES.filter((c) => specConfig.mandatory.includes(c.id));
+      
+      const completedSpecElectives = specConfig.electives.filter((id) => completedCourses.includes(id));
+      const specElectivesNeeded = Math.max(0, specConfig.electiveCount - completedSpecElectives.length);
+      
+      const remainingSpecElectives = COURSES.filter(
+        (c) => specConfig.electives.includes(c.id) && !completedCourses.includes(c.id)
+      );
+
+      const optimalSpecElectives = [...remainingSpecElectives]
+        .sort((a, b) => {
+          const aMissing = (a.prerequisites || []).filter((p) => !completedCourses.includes(p)).length;
+          const bMissing = (b.prerequisites || []).filter((p) => !completedCourses.includes(p)).length;
+          return aMissing - bMissing;
+        })
+        .slice(0, specElectivesNeeded);
+
+      specializationPool = [...mandatorySpec, ...optimalSpecElectives];
+    }
+
+    const completedUpperDivs = COURSES.filter(
+      (c) => isUpperDivElective(c.id) && completedCourses.includes(c.id)
+    );
+
+    const completedSpecThatCountAsUpperDiv = specializationPool.filter(
+      (c) => isUpperDivElective(c.id) && completedCourses.includes(c.id)
+    );
+
+    const totalCompletedUpperDivs = new Set([
+      ...completedUpperDivs.map(c => c.id),
+      ...completedSpecThatCountAsUpperDiv.map(c => c.id)
+    ]).size;
+
+    const upperDivsStillNeeded = Math.max(
+      0, 
+      DEGREE_REQUIREMENTS.upperDivisionElectives.requiredCount - totalCompletedUpperDivs
+    );
+
+    const remainingUpperDivChoices = COURSES.filter(
+      (c) => isUpperDivElective(c.id) && !completedCourses.includes(c.id)
+    );
+
+    const optimalUpperDivSlice = [...remainingUpperDivChoices]
+      .sort((a, b) => {
+        const aMissing = (a.prerequisites || []).filter((p) => !completedCourses.includes(p)).length;
+        const bMissing = (b.prerequisites || []).filter((p) => !completedCourses.includes(p)).length;
+        return aMissing - bMissing;
+      })
+      .slice(0, upperDivsStillNeeded);
+
+    const strictCombinedPool = [
+      ...corePool,
+      ...specializationPool,
+      ...optimalUpperDivSlice,
+    ];
+
+    return Array.from(new Set(strictCombinedPool.map((c) => c.id)))
+      .map((id) => strictCombinedPool.find((c) => c.id === id)!);
+  }, [specialization, completedCourses]);
+
+  /* ==========================================================================
+     INTERACTIVE EVENT HANDLERS
+     ========================================================================== */
   const toggleCourse = (courseId: string) => {
     setErrorState(null);
-
     const isCurrentlyCompleted = completedCourses.includes(courseId);
 
     if (isCurrentlyCompleted) {
-      setCompletedCourses((prev) =>
-        prev.filter((id) => id !== courseId)
-      );
+      setCompletedCourses((prev) => prev.filter((id) => id !== courseId));
     } else {
       const currentCourse = COURSES.find((c) => c.id === courseId);
-
       const prerequisites = currentCourse?.prerequisites || [];
-
       const missingPrereqs = prerequisites.filter(
         (reqId) => !completedCourses.includes(reqId)
       );
@@ -49,7 +168,6 @@ export default function CoursePlanner() {
           courseId,
           message: `Prerequisite required: ${missingPrereqs.join(", ")}`,
         });
-
         return;
       }
 
@@ -57,11 +175,10 @@ export default function CoursePlanner() {
     }
   };
 
-  const availableCourses =
-    getAvailableCourses(completedCourses);
+  const availableCourses = getAvailableCourses(completedCourses);
 
   const generatedSchedule = generateSchedule(
-    COURSES,
+    optimizedCoursesForSchedule,
     completedCourses,
     12,
     currentYear,
@@ -71,14 +188,10 @@ export default function CoursePlanner() {
 
   return (
     <div className="w-full space-y-4 max-w-7xl mx-auto">
-
-      {/* COURSE CHECKLIST */}
+      {/* RENDER TRACKER CHECKLIST PANEL */}
       <div className="w-full bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden text-sm">
-
-        {/* Header */}
         <div className="p-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/50">
           <div className="flex items-center justify-between">
-
             <h3 className="font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2">
               <svg
                 className="w-4 h-4 text-indigo-500"
@@ -93,25 +206,18 @@ export default function CoursePlanner() {
                   d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
                 />
               </svg>
-
               Course Planner Tracker
             </h3>
 
             <button
-              onClick={() =>
-                setShowChecklist((prev) => !prev)
-              }
+              onClick={() => setShowChecklist((prev) => !prev)}
               className="text-xs font-medium px-3 py-1 rounded-lg bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700 transition"
             >
-              {showChecklist
-                ? "Hide Checklist"
-                : "Show Checklist"}
+              {showChecklist ? "Hide Checklist" : "Show Checklist"}
             </button>
-
           </div>
         </div>
 
-        {/* Error Alert */}
         {errorState && (
           <div className="mx-4 mt-3 p-3 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900 text-rose-800 dark:text-rose-300 rounded-lg flex items-center gap-2.5 text-xs">
             <svg
@@ -127,44 +233,44 @@ export default function CoursePlanner() {
                 d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
               />
             </svg>
-
             <div className="font-medium">
               <span className="font-bold uppercase tracking-wider bg-rose-200/50 dark:bg-rose-900/50 px-1 py-0.5 rounded text-[10px] mr-1.5">
                 {errorState.courseId}
               </span>
-
               {errorState.message}
             </div>
           </div>
         )}
 
-        {/* Collapsible Checklist */}
         {showChecklist && (
           <div className="p-4 space-y-3">
-
             <div className="flex justify-between items-center text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
               <span>Completed Courses Checklist</span>
-
               <span className="text-indigo-600 dark:text-indigo-400 font-bold bg-indigo-50 dark:bg-indigo-950/40 px-2 py-0.5 rounded">
                 {completedCourses.length} Taken
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[280px] overflow-y-auto pr-1 pb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[320px] overflow-y-auto pr-1 pb-4">
+              {filteredCoursesForChecklist.map((course) => {
+                const isCompleted = completedCourses.includes(course.id);
+                const hasError = errorState?.courseId === course.id;
 
-              {COURSES.map((course) => {
-                const isCompleted =
-                  completedCourses.includes(course.id);
+                const isCore = DEGREE_REQUIREMENTS.core.includes(course.id);
+                const isUpperDiv = isUpperDivElective(course.id);
+                
+                const specConfig = specialization !== "ALL" 
+                  ? DEGREE_REQUIREMENTS.specializations[specialization] 
+                  : null;
 
-                const hasError =
-                  errorState?.courseId === course.id;
+                const isSpecializationRelated = specConfig
+                  ? specConfig.mandatory.includes(course.id) || specConfig.electives.includes(course.id)
+                  : false;
 
                 return (
                   <button
                     key={course.id}
-                    onClick={() =>
-                      toggleCourse(course.id)
-                    }
+                    onClick={() => toggleCourse(course.id)}
                     className={`w-full flex items-center justify-between p-2.5 rounded-lg border text-left transition-all text-xs ${
                       isCompleted
                         ? "bg-indigo-50/60 border-indigo-200 dark:bg-indigo-950/30 dark:border-indigo-900/50 text-indigo-900 dark:text-indigo-200"
@@ -173,19 +279,35 @@ export default function CoursePlanner() {
                         : "bg-white border-gray-100 hover:border-gray-200 dark:bg-gray-900 dark:border-gray-800 dark:hover:border-gray-700 text-gray-600 dark:text-gray-300"
                     }`}
                   >
-
-                    <div className="truncate mr-2">
+                    <div className="truncate mr-2 flex items-center gap-2">
                       <span
-                        className={`font-bold mr-1.5 ${
-                          isCompleted
-                            ? "text-indigo-600 dark:text-indigo-400"
-                            : "text-gray-400"
+                        className={`font-mono font-bold shrink-0 ${
+                          isCompleted ? "text-indigo-600 dark:text-indigo-400" : "text-gray-400"
                         }`}
                       >
                         {course.id}
                       </span>
-
-                      <span>{course.name}</span>
+                      <span className="truncate max-w-[140px] sm:max-w-[200px]">
+                        {course.name}
+                      </span>
+                      
+                      <div className="flex gap-1 shrink-0">
+                        {isSpecializationRelated ? (
+                          <span className="text-[9px] px-1 py-0.5 rounded font-bold uppercase tracking-wider bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400">
+                            Specialization
+                          </span>
+                        ) : null}
+                        {isCore ? (
+                          <span className="text-[9px] px-1 py-0.5 rounded font-bold uppercase tracking-wider bg-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400">
+                            Core
+                          </span>
+                        ) : null}
+                        {isUpperDiv ? (
+                          <span className="text-[9px] px-1 py-0.5 rounded font-bold uppercase tracking-wider bg-purple-100 dark:bg-purple-950/50 text-purple-700 dark:text-purple-400">
+                            Upper-Div
+                          </span>
+                        ) : null}
+                      </div>
                     </div>
 
                     <div
@@ -198,51 +320,36 @@ export default function CoursePlanner() {
                       }`}
                     >
                       {isCompleted && (
-                        <svg
-                          className="w-2.5 h-2.5 fill-current"
-                          viewBox="0 0 20 20"
-                        >
+                        <svg className="w-2.5 h-2.5 fill-current" viewBox="0 0 20 20">
                           <path d="M0 11l2-2 5 5L18 3l2 2L7 18z" />
                         </svg>
                       )}
                     </div>
-
                   </button>
                 );
               })}
-
             </div>
           </div>
         )}
       </div>
 
-      {/* AVAILABLE COURSES */}
-      <AvailableCoursesList
-        courses={availableCourses}
-      />
+      {/* RENDER CURRENT QUARTER IMMEDIATE AVAILABILITY LIST */}
+      <AvailableCoursesList courses={availableCourses} />
 
-      {/* CURRENT POSITION */}
+      {/* RENDER ACADEMIC PARAMETERS SELECTION STRIP */}
       <div className="w-full bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden text-sm">
-
         <div className="p-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/50">
-          <h3 className="font-bold text-gray-800 dark:text-gray-200">
-            Academic Status
-          </h3>
+          <h3 className="font-bold text-gray-800 dark:text-gray-200">Academic Status</h3>
         </div>
 
-        <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-          {/* Year */}
+        <div className="p-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="space-y-1">
             <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">
               Start Year
             </label>
-
             <select
               value={currentYear}
-              onChange={(e) =>
-                setCurrentYear(Number(e.target.value))
-              }
+              onChange={(e) => setCurrentYear(Number(e.target.value))}
               className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 p-2"
             >
               <option value={1}>Year 1</option>
@@ -252,21 +359,15 @@ export default function CoursePlanner() {
             </select>
           </div>
 
-          {/* Quarter */}
           <div className="space-y-1">
             <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">
               Start Quarter
             </label>
-
             <select
               value={currentQuarter}
               onChange={(e) =>
                 setCurrentQuarter(
-                  e.target.value as
-                    | "Fall"
-                    | "Winter"
-                    | "Spring"
-                    | "Summer"
+                  e.target.value as "Fall" | "Winter" | "Spring" | "Summer"
                 )
               }
               className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 p-2"
@@ -274,155 +375,115 @@ export default function CoursePlanner() {
               <option value="Fall">Fall</option>
               <option value="Winter">Winter</option>
               <option value="Spring">Spring</option>
+              <option value="Summer">Summer</option>
             </select>
           </div>
 
+          <div className="space-y-1">
+            <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+              Planned Specialization
+            </label>
+            <select
+              value={specialization}
+              onChange={(e) => setSpecialization(e.target.value as SpecializationKey)}
+              className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 p-2 text-indigo-600 dark:text-indigo-400 font-semibold"
+            >
+              <option value="ALL">All Major Requirements</option>
+              {Object.keys(DEGREE_REQUIREMENTS.specializations).map((key) => (
+                <option key={key} value={key}>
+                  {key.replace(/([A-Z])/g, " $1").trim()}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
-      {/* Optimization Mode */}
       <div className="space-y-1">
         <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">
           Optimization Mode
         </label>
-
         <select
           value={optimizationMode}
           onChange={(e) =>
             setOptimizationMode(
-              e.target.value as
-                | "FASTEST"
-                | "BALANCED"
-                | "LIGHTWEIGHT"
+              e.target.value as "FASTEST" | "BALANCED" | "LIGHTWEIGHT" | "INTERNSHIP" | "SUMMER"
             )
           }
           className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 p-2"
         >
-          <option value="FASTEST">
-            Fastest Graduation
-          </option>
-
-          <option value="BALANCED">
-            Balanced Workload
-          </option>
-
-          <option value="LIGHTWEIGHT">
-            Lightweight Quarters
-          </option>
-
-          <option value="INTERNSHIP">
-            Internship Friendly (Off-Season)
-          </option>
-
-          <option value="SUMMER">
-            Maximize Summer
-          </option>
-
+          <option value="FASTEST">Fastest Graduation</option>
+          <option value="BALANCED">Balanced Workload</option>
+          <option value="LIGHTWEIGHT">Lightweight Quarters</option>
+          <option value="INTERNSHIP">Internship Friendly (Off-Season)</option>
+          <option value="SUMMER">Maximize Coming Summer</option>
         </select>
       </div>
 
-      {/* ROADMAP */}
+      {/* RENDER CHRONOLOGICAL TIMELINE GRADUATION ROADMAP */}
       <div className="w-full bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
-
-        {/* Header */}
         <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/50">
           <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">
             Sample Roadmap
           </h3>
-
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             Automatically generated prerequisite-aware graduation path for each quarter left.
           </p>
         </div>
 
-        {/* Timeline */}
         <div className="overflow-x-auto pb-4 rounded-2xl bg-gray-50 dark:bg-gray-950">
           <div className="flex items-start gap-8 px-6 py-8 w-max">
+            {Object.entries(generatedSchedule).map(([quarter, courses]) => {
+              const totalUnits = courses.reduce((sum, course) => sum + course.units, 0);
 
-            {Object.entries(generatedSchedule).map(
-              ([quarter, courses]) => {
-
-                const totalUnits = courses.reduce(
-                  (sum, course) =>
-                    sum + course.units,
-                  0
-                );
-
-                return (
-                  <div
-                    key={quarter}
-                    className="relative w-[340px] shrink-0"
-                  >
-
-                    {/* Connector */}
-                    <div className="absolute top-7 -right-4 w-8 h-[2px] bg-gray-300 dark:bg-gray-700" />
-
-                    {/* Quarter Card */}
-                    <div className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-950 shadow-sm overflow-hidden">
-
-                      {/* Quarter Header */}
-                      <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900">
-                        <div className="flex items-center justify-between">
-
-                          <div>
-                            <h4 className="font-bold text-gray-900 dark:text-white">
-                              {quarter}
-                            </h4>
-
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                              {courses.length} Courses
-                            </p>
-                          </div>
-
-                          <div className="text-xs font-semibold px-3 py-1 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400">
-                            {totalUnits} Units
-                          </div>
-
+              return (
+                <div key={quarter} className="relative w-[340px] shrink-0">
+                  <div className="absolute top-7 -right-4 w-8 h-[2px] bg-gray-300 dark:bg-gray-700" />
+                  <div className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-950 shadow-sm overflow-hidden">
+                    <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-bold text-gray-900 dark:text-white">{quarter}</h4>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            {courses.length} Courses
+                          </p>
+                        </div>
+                        <div className="text-xs font-semibold px-3 py-1 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400">
+                          {totalUnits} Units
                         </div>
                       </div>
+                    </div>
 
-                      {/* Course Stack */}
-                      <div className="p-4 space-y-3">
-
-                        {courses.length === 0 ? (
-                          <div className="text-sm text-gray-400 italic">
-                            No scheduled courses
-                          </div>
-                        ) : (
-                          courses.map((course) => (
-                            <div
-                              key={course.id}
-                              className="rounded-xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 hover:shadow-md transition-all"
-                            >
-
-                              <div className="flex items-start justify-between gap-3">
-
-                                <div>
-                                  <div className="font-bold text-sm text-gray-900 dark:text-gray-100">
-                                    {course.id}
-                                  </div>
-
-                                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">
-                                    {course.name}
-                                  </div>
+                    <div className="p-4 space-y-3">
+                      {courses.length === 0 ? (
+                        <div className="text-sm text-gray-400 italic">No scheduled courses</div>
+                      ) : (
+                        courses.map((course) => (
+                          <div
+                            key={course.id}
+                            className="rounded-xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 hover:shadow-md transition-all"
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <div>
+                                <div className="font-bold text-sm text-gray-900 dark:text-gray-100">
+                                  {course.id}
                                 </div>
-
-                                <div className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 whitespace-nowrap">
-                                  {course.units}u
+                                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">
+                                  {course.name}
                                 </div>
-
+                              </div>
+                              <div className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 whitespace-nowrap">
+                                {course.units}u
                               </div>
                             </div>
-                          ))
-                        )}
-
-                      </div>
+                          </div>
+                        ))
+                      )}
                     </div>
                   </div>
-                );
-              }
-            )}
-
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>

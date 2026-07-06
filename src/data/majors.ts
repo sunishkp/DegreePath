@@ -8,7 +8,7 @@ export const MAJORS = {
       "ICS46",
       "ICS51",
       "ICS53",
-      "COMPSCI161",
+      "CS161",
       "ICS139W",
       "IN4MATX43",
       "ICS6B",
