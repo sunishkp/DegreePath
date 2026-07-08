@@ -64,7 +64,7 @@ export const COURSES: Course[] = [
   },
 
   {
-    id: "IN4MATX43",
+    id: "INFMATX43",
     name: "Introduction to Software Engineering",
     units: 4,
     prerequisites: ["ICS32"],
@@ -135,8 +135,79 @@ export const COURSES: Course[] = [
     offered: ["Fall", "Winter", "Spring", "Summer"],
   },
 
-  /* Algorithms - Specialization*/
+  {
+    id: "INFMATX113",
+    name: "Requirements Analysis and Engineering",
+    units: 4,
+    prerequisites: ["INFMATX43"],
+    offered: ["Fall", "Spring", "Summer"],
+  },
 
+  {
+    id: "INFMATX115",
+    name: "Software Testing, Analysis, and Quality Assurance",
+    units: 4,
+    prerequisites: ["INFMATX43", "INFMATX113"],
+    offered: ["Fall", "Winter"],
+  },
+
+  {
+    id: "INFMATX117",
+    name: "Project in Software System Design",
+    units: 4,
+    prerequisites: ["INFMATX43", "INFMATX115"],
+    offered: ["Winter", "Spring"],
+  },
+
+  {
+    id: "INFMATX121",
+    name: "Software Design: Applications",
+    units: 4,
+    prerequisites: ["INFMATX43"],
+    offered: ["Fall", "Spring"],
+  },
+
+  {
+    id: "INFMATX122",
+    name: "Software Design: Structure and Implementation",
+    units: 4,
+    prerequisites: ["INFMATX43"],
+    offered: ["Fall", "Winter", "Spring"],
+  },
+
+  {
+    id: "INFMATX124",
+    name: "Internet Applications Engineering",
+    units: 4,
+    prerequisites: ["INFMATX43"],
+    offered: ["Fall", "Spring"],
+  },
+
+  {
+    id: "INFMATX131",
+    name: "Human Computer Interaction",
+    units: 4,
+    prerequisites: ["INFMATX43", "ICS33"],
+    offered: ["Fall", "Winter", "Spring", "Summer"],
+  },
+
+  {
+    id: "INFMATX133",
+    name: "User Interaction Software",
+    units: 4,
+    prerequisites: ["INFMATX43", "INFMATX131"],
+    offered: ["Fall", "Winter", "Summer"],
+  },
+
+  {
+    id: "INFMATX134",
+    name: "Advanced Topics in User Interface Software",
+    units: 4,
+    prerequisites: ["INFMATX43"],
+    offered: ["Fall", "Winter"],
+  }, 
+
+  /*Algorithms - Specialization */
   {
     id: "CS162",
     name: "Formal Languages and Autaomata",
@@ -506,33 +577,17 @@ export const COURSES: Course[] = [
 import { DEGREE_REQUIREMENTS } from "./degreeRequirements";
 
 DEGREE_REQUIREMENTS.upperDivisionElectives.allowedCourses.forEach((rule) => {
-  
-  if (typeof rule === "string") {
-    if (!COURSES.some((c) => c.id === rule)) {
-      const label = rule.startsWith("CS") ? "Computer Science" : "Informatics";
-      const digits = rule.match(/\d+/)?.[0] || "";
-
-      COURSES.push({
-        id: rule,
-        name: `${label} Elective Option ${digits}`,
-        units: 4,
-        prerequisites: ["ICS46"],
-        offered: ["Fall", "Winter", "Spring"],
-      });
-    }
-  } 
-  
-  else if (typeof rule === "object" && rule.type === "range") {
-    const label = rule.subject === "CS" ? "CS" : rule.subject;
-
+  // 1. Only process object ranges belonging to Computer Science ("CS")
+  if (typeof rule === "object" && rule.type === "range" && rule.subject === "CS") {
+    
     for (let num = rule.start; num <= rule.end; num++) {
-      const generatedId = `${rule.subject}${num}`;
+      const generatedId = `CS${num}`;
 
-      // Only add if it doesn't already exist as a manual core/specialization course
+      // Only add if it doesn't already exist as a manual course
       if (!COURSES.some((c) => c.id === generatedId)) {
         COURSES.push({
           id: generatedId,
-          name: `${label} Upper-Div Elective ${num}`,
+          name: `CS Upper-Div Elective ${num}`,
           units: 4,
           prerequisites: ["ICS46"],
           offered: ["Fall", "Winter", "Spring"],
@@ -540,4 +595,5 @@ DEGREE_REQUIREMENTS.upperDivisionElectives.allowedCourses.forEach((rule) => {
       }
     }
   }
+  // The string logic block is completely gone so your manual Informatics entries are untouched.
 });
